@@ -77,6 +77,10 @@ module i2c_follow #(
 			got_reg <= 0;
 			reg_num <= 0;
 			autoincr <= 0;
+			regs_o <= 0;
+			bitstream <= 0;
+			bitcount <= 0;
+			readmode <= 0;
 
 		end else begin
 

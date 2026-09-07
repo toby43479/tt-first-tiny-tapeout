@@ -108,9 +108,16 @@ module io_expander #(
 
 	reg [7:0] counter;
 	always @ (negedge clk or negedge run) begin
-		if (!run)
+		if (!run) begin
 			counter <= 0;
-		else begin
+			pwm_in_high <= 0;
+			pwm_in_low <= 0;
+			pwm_in_period <= 0;
+			high_count <= 0;
+			low_count <= 0;
+			prev_any_high <= 0;
+			prev_edge <= 0;
+		end else begin
 			counter <= counter + 1;
 
 			if (counter == 0) begin
