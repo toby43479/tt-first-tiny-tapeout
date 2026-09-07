@@ -5,17 +5,6 @@ module i2c_follow #(
 	input clk,
 	input run,
 
-	input [7:0] tx_data,
-	input tx_data_ready,
-	output reg tx_data_wanted,
-	output reg tx_data_latched,
-	output reg tx_data_done,
-
-	output reg [7:0] rx_data,
-	output reg rx_data_ready,
-	input rx_data_wanted,
-	input rx_data_continue,
-
 	input scl,
 	output scl_out,
 	input sda,
@@ -100,11 +89,6 @@ module i2c_follow #(
 
 			end else if (state != state_idle) begin
 
-			rx_data_ready <= 0;
-			tx_data_latched <= 0;
-			tx_data_done <= 0;
-			tx_data_wanted <= 0;
-
 			case (state)
 			state_read: begin
 				if (scl_falling) begin
@@ -125,15 +109,9 @@ module i2c_follow #(
 				end
 				if (scl_rising) begin
 					if (!sda) begin
-						tx_data_done <= 1;
-						if (tx_data_ready) begin
-							bitstream <= tx_data;
-							tx_data_latched <= 1;
-						end else begin
-							bitstream <= regs_i[reg_num];
-							if (autoincr)
-								reg_num <= reg_num + 1;
-						end
+						bitstream <= regs_i[reg_num];
+						if (autoincr)
+							reg_num <= reg_num + 1;
 					end
 
 					state <= state_read;
@@ -156,28 +134,16 @@ module i2c_follow #(
 			end
 			state_write_ack: begin
 				if (scl_falling) begin
-					if (rx_data_wanted) begin
-						rx_data <= bitstream;
-						rx_data_ready <= 1;
+					sda_raw <= 0;
 
-						if (rx_data_continue) begin
-							sda_raw <= 0;
-						end else begin
-							scl_raw <= 0; // stretch clock
-							state <= state_pending_write_ack;
-						end
+					if (!got_reg) begin
+						got_reg <= 1;
+						reg_num <= bitstream[3:0];
+						autoincr <= bitstream[7];
 					end else begin
-						sda_raw <= 0;
-
-						if (!got_reg) begin
-							got_reg <= 1;
-							reg_num <= bitstream[3:0];
-							autoincr <= bitstream[7];
-						end else begin
-							regs_o[reg_num] <= bitstream;
-							if (autoincr)
-								reg_num <= reg_num + 1;
-						end
+						regs_o[reg_num] <= bitstream;
+						if (autoincr)
+							reg_num <= reg_num + 1;
 					end
 				end
 				if (scl_rising) begin
@@ -215,14 +181,9 @@ module i2c_follow #(
 					state <= readmode ? state_read : state_write;
 
 					if (readmode) begin
-						if (tx_data_ready) begin
-							bitstream <= tx_data;
-							tx_data_latched <= 1;
-						end else begin
-							bitstream <= regs_i[reg_num];
-							if (autoincr)
-								reg_num <= reg_num + 1;
-						end
+						bitstream <= regs_i[reg_num];
+						if (autoincr)
+							reg_num <= reg_num + 1;
 					end
 				end
 			end

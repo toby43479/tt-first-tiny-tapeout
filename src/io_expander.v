@@ -47,31 +47,30 @@ module io_expander #(
 	wire pwm_out[2];
 	wire [7:0] pwm_enable_pin[2];
 
-	generate for (i = 0; i < 2; i++) begin
-		assign pwm_enable_pin[i] = regs_i[6 + 3*i];
+	// generate for (i = 0; i < 2; i++) begin
+		assign pwm_enable_pin[0] = regs_i[6 + 3*0];
 
 		wire [7:0] pwm_loop;
-		assign pwm_loop = regs_i[4 + 3*i];
+		assign pwm_loop = regs_i[4 + 3*0];
 		wire [7:0] pwm_cutoff;
-		assign pwm_cutoff = regs_i[5 + 3*i];
+		assign pwm_cutoff = regs_i[5 + 3*0];
 
-		reg [7:0] counter;
+		reg [7:0] pwm_out_counter;
 		always @ (negedge clk or negedge run) begin
 			if (!run)
-				counter <= 0;
-			else if (counter == pwm_loop)
-				counter <= 0;
+				pwm_out_counter <= 0;
+			else if (pwm_out_counter == pwm_loop)
+				pwm_out_counter <= 0;
 			else
-				counter <= counter + 1;
+				pwm_out_counter <= pwm_out_counter + 1;
 		end
 
 		wire pwm_on;
-		assign pwm_on = pwm_enable_pin[i] != 0;
-		assign pwm_out[i] =
-			  (pwm_on && counter > pwm_cutoff)
+		assign pwm_on = pwm_enable_pin[0] != 0;
+		assign pwm_out[0] =
+			  (pwm_on && pwm_out_counter > pwm_cutoff)
 				? 1 : 0;
-	end
-	endgenerate
+	// end endgenerate
 
 	wire [7:0] pwm_in_enable;
 	assign pwm_in_enable = regs_i['ha];
@@ -106,10 +105,10 @@ module io_expander #(
 	reg prev_any_high;
 	reg [7:0] prev_edge;
 
-	reg [7:0] counter;
+	reg [7:0] pwm_in_counter;
 	always @ (negedge clk or negedge run) begin
 		if (!run) begin
-			counter <= 0;
+			pwm_in_counter <= 0;
 			pwm_in_high <= 0;
 			pwm_in_low <= 0;
 			pwm_in_period <= 0;
@@ -118,9 +117,9 @@ module io_expander #(
 			prev_any_high <= 0;
 			prev_edge <= 0;
 		end else begin
-			counter <= counter + 1;
+			pwm_in_counter <= pwm_in_counter + 1;
 
-			if (counter == 0) begin
+			if (pwm_in_counter == 0) begin
 				pwm_in_high <= high_count;
 				pwm_in_low <= low_count;
 				high_count <= {7'h0, any_high};
@@ -131,8 +130,8 @@ module io_expander #(
 			end
 
 			if (any_high && !prev_any_high) begin
-				pwm_in_period <= counter - prev_edge;
-				prev_edge <= counter;
+				pwm_in_period <= pwm_in_counter - prev_edge;
+				prev_edge <= pwm_in_counter;
 			end
 
 			prev_any_high <= any_high;
@@ -144,7 +143,7 @@ module io_expander #(
 		assign uo_out[i] =
 			  or_out_pins[i] ? or_out
 			: pwm_enable_pin[0][i] ? pwm_out[0]
-			: pwm_enable_pin[1][i] ? pwm_out[1]
+			//: pwm_enable_pin[1][i] ? pwm_out[1]
 			: regs_i[1][i];
 	end
 	endgenerate

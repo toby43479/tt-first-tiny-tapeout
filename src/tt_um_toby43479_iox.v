@@ -15,7 +15,7 @@ module tt_um_toby43479_iox(
 	assign uio_oe[7:2] = 0;
 
 	wire run;
-	assign run = ~rst_n;
+	assign run = rst_n;
 
         wire sda;
         wire sda_follow;
@@ -41,22 +41,7 @@ module tt_um_toby43479_iox(
 		: scl_follow == 0 ? 0
 		: 1;
 
-        wire [7:0] rx_data;
-        wire rx_data_ready;
-        wire rx_data_continue;
-	wire rx_data_wanted;
-        wire [7:0] tx_data;
-        wire tx_data_ready;
-        wire tx_data_latched;
-        wire tx_data_done;
-	wire tx_data_wanted;
-
-	assign tx_data = 0;
-	assign tx_data_ready = 0;
-	assign rx_data_continue = 0;
-	assign rx_data_wanted = 0;
-
-        reg [15:0][7:0] regs_o;
+        wire [15:0][7:0] regs_o;
         wire [15:0][7:0] regs_i;
 
 	i2c_follow i2c(
@@ -66,15 +51,6 @@ module tt_um_toby43479_iox(
                 .sda_out(sda_follow),
                 .scl(scl),
                 .scl_out(scl_follow),
-                .tx_data(tx_data),
-                .tx_data_ready(tx_data_ready),
-                .tx_data_latched(tx_data_latched),
-                .tx_data_done(tx_data_done),
-                .tx_data_wanted(tx_data_wanted),
-                .rx_data(rx_data),
-                .rx_data_ready(rx_data_ready),
-                .rx_data_continue(rx_data_continue),
-		.rx_data_wanted(rx_data_wanted),
 		.regs_o(regs_o),
 		.regs_i(regs_i)
 	);
